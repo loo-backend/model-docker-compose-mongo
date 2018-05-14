@@ -1,0 +1,42 @@
+version: '2'
+services:
+    web:
+        image: nginx:latest
+        container_name: webserver-users.api1-loo
+        ports:
+            - "8010:80"
+            - "3010:443"
+        restart: always
+        volumes:
+            - "./etc/nginx/default.conf:/etc/nginx/conf.d/default.conf"
+            - "./etc/ssl:/etc/ssl"
+            - "./web:/web"
+        depends_on:
+            - "php"
+            - "mongodb"
+        environment:
+            VIRTUAL_HOST: users.api1.loojas.com
+    php:
+        image: nanoninja/php-fpm
+        restart: always
+        volumes:
+            - "./etc/php/php.ini:/usr/local/etc/php/conf.d/php.ini"
+            - ./web:/web
+    composer:
+        image: composer/composer
+        volumes:
+            - ./web:/app
+        command: install
+    mongodb:
+        image: mongo
+        container_name: mongo-users.api1-loo
+        restart: always
+        volumes:
+            - ./data/db/mongo:/data/db
+        ports:
+            - "27010:27017"
+        command: --storageEngine wiredTiger
+networks:
+    default:
+        external:
+            name: nginx-proxy
